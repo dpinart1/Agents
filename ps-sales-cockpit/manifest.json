@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "PS Sales Cockpit",
+  "short_name": "Sales Cockpit",
+  "version": "1.0.0",
+  "description": "Zentrales Vertriebs-Cockpit der PS AI HUB Suite – Schnellzugriff auf Sales-Systeme, KI-Prompts, Workflows, Top-Kunden und Jahresfokus.",
+  "author": "Daniel Plum, PS AI HUB",
+  "action": {
+    "default_title": "PS Sales Cockpit",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage", "clipboardWrite"],
+  "minimum_chrome_version": "110"
+}

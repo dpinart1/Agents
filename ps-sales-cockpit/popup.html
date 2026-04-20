@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PS Sales Cockpit</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo">PS</div>
+        <div class="brand-text">
+          <h1>PS SALES COCKPIT</h1>
+          <p class="brand-subline">ZENTRALES VERTRIEBS-COCKPIT</p>
+        </div>
+      </div>
+      <div class="status-row">
+        <span class="status-dot"></span>
+        <span class="status-label">Cockpit aktiv</span>
+        <span class="status-spacer"></span>
+        <span class="status-pill">v1.0</span>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" role="tab" data-tab="dashboard">Dashboard</button>
+      <button class="tab" role="tab" data-tab="ki">Sales KI</button>
+      <button class="tab" role="tab" data-tab="flows">Flows</button>
+      <button class="tab" role="tab" data-tab="kunden">Top 20</button>
+      <button class="tab" role="tab" data-tab="fokus">Fokus</button>
+      <button class="tab" role="tab" data-tab="wissen">Wissen</button>
+    </nav>
+
+    <main class="tab-panels">
+      <!-- DASHBOARD -->
+      <section class="panel is-active" id="panel-dashboard" role="tabpanel">
+        <h2 class="section-heading">Schnellstart — Vertriebssysteme</h2>
+        <div class="card-grid" id="dashboard-grid"></div>
+
+        <h2 class="section-heading">Reporting &amp; Analytics</h2>
+        <div class="card-grid" id="analytics-grid"></div>
+
+        <h2 class="section-heading">Ihr Vertriebs-Arbeitsplatz</h2>
+        <div class="status-card">
+          <div class="status-line">
+            <span>Pipeline-Health-Check</span>
+            <button class="pill-btn" data-open="https://tuev-sued.sharepoint.com/sites/AIHUB">PRÜFEN</button>
+          </div>
+          <div class="status-line">
+            <span>Sales Enablement</span>
+            <span class="pill-state">AKTIV</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SALES KI -->
+      <section class="panel" id="panel-ki" role="tabpanel">
+        <h2 class="section-heading">KI-Assistenten</h2>
+        <div class="card-grid" id="agents-grid"></div>
+
+        <h2 class="section-heading">Prompt-Bibliothek — Vertriebs-Wertschöpfungskette</h2>
+        <div class="filter-row">
+          <input type="search" id="prompt-search" placeholder="Prompt suchen…" />
+        </div>
+        <div class="chip-row" id="prompt-chips"></div>
+        <div class="prompt-list" id="prompt-list"></div>
+      </section>
+
+      <!-- FLOWS -->
+      <section class="panel" id="panel-flows" role="tabpanel">
+        <h2 class="section-heading">Sales Flows — Automatisierte Workflows</h2>
+        <p class="section-hint">Lösen Sie über vordefinierte Trigger-Mails standardisierte Vertriebs-Prozesse aus.</p>
+        <div class="flow-list" id="flow-list"></div>
+      </section>
+
+      <!-- TOP 20 KUNDEN -->
+      <section class="panel" id="panel-kunden" role="tabpanel">
+        <div id="kunden-list-view">
+          <h2 class="section-heading">Top 20 Kunden</h2>
+          <p class="section-hint">Strategische Schlüsselkunden — Stammdaten via Microsoft Dynamics &amp; SharePoint.</p>
+          <div class="filter-row">
+            <input type="search" id="customer-search" placeholder="Kunde suchen…" />
+          </div>
+          <div class="customer-list" id="customer-list"></div>
+        </div>
+        <div id="kunden-detail-view" hidden>
+          <button class="back-btn" id="customer-back">‹ Zurück zur Übersicht</button>
+          <div id="customer-detail"></div>
+        </div>
+      </section>
+
+      <!-- FOKUS -->
+      <section class="panel" id="panel-fokus" role="tabpanel">
+        <h2 class="section-heading">Sales Fokus &amp; Budget</h2>
+        <p class="section-hint">Strategische Stoßrichtungen, Wachstumsfelder und Budgetallokation je Geschäftsjahr.</p>
+        <div class="year-tabs" id="year-tabs"></div>
+        <div class="focus-content" id="focus-content"></div>
+      </section>
+
+      <!-- WISSEN -->
+      <section class="panel" id="panel-wissen" role="tabpanel">
+        <h2 class="section-heading">Wissen &amp; Richtlinien</h2>
+        <div class="card-grid" id="knowledge-grid"></div>
+
+        <h2 class="section-heading">Sales Playbooks</h2>
+        <div class="card-grid" id="playbook-grid"></div>
+
+        <h2 class="section-heading">Compliance &amp; Governance</h2>
+        <div class="card-grid" id="compliance-grid"></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>by PS AI HUB</span>
+      <a href="#" id="open-hub">AI HUB öffnen →</a>
+    </footer>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="data/prompts.js"></script>
+    <script src="data/customers.js"></script>
+    <script src="data/focus.js"></script>
+    <script src="data/flows.js"></script>
+    <script src="data/links.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
