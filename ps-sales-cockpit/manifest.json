@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PS Sales Cockpit",
   "short_name": "Sales Cockpit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Zentrales Vertriebs-Cockpit der PS AI HUB Suite – Schnellzugriff auf Sales-Systeme, KI-Prompts, Workflows, Top-Kunden und Jahresfokus.",
   "author": "Daniel Plum, PS AI HUB",
   "action": {

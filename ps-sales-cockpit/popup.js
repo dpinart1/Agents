@@ -1,16 +1,22 @@
 /* PS Sales Cockpit — popup logic
- * - Tab navigation
- * - Renders all card grids from data/links.js
- * - Renders the prompt library with category chips and search
- * - Renders the Sales Flow trigger-mail buttons
- * - Renders the Top-20 customer list + detail view
- * - Renders the yearly Sales Focus
+ * - Tab navigation (with default-tab persistence)
+ * - Heute/Hero widget with personalisation + KPI placeholders
+ * - Card grids from data/links.js
+ * - Prompt library with category chips, search, bookmarking, target-routing
+ * - Sales-Flow trigger-mail buttons
+ * - Top-20 customers: list + rich detail view + bookmarking
+ * - Yearly Sales-Focus tabs
+ * - Merkliste tab (favourites for prompts & customers)
+ * - Einstellungen tab (profile, default tab, default agent)
+ * - Persistence via chrome.storage.local with localStorage fallback
  */
 
 (function () {
   "use strict";
 
   const HUB_URL = "https://tuev-sued.sharepoint.com/sites/AIHUB";
+  const ROXTRA_URL = "https://roxtra.tuev-sued.com/Roxtra/index.aspx";
+  const STORAGE_KEY = "psSalesCockpit.v1";
 
   // ————— UTIL —————
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -53,20 +59,95 @@
     return Promise.resolve();
   }
 
-  // ————— TABS —————
-  function initTabs() {
-    $$(".tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const target = tab.dataset.tab;
-        $$(".tab").forEach((t) => t.classList.toggle("is-active", t === tab));
-        $$(".panel").forEach((p) =>
-          p.classList.toggle("is-active", p.id === `panel-${target}`)
-        );
-      });
+  function escapeHtml(str) {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // ————— PERSISTENCE —————
+  const defaultState = {
+    profile: { displayName: "", role: "", region: "", defaultTab: "dashboard", defaultAgent: "copilot" },
+    bookmarks: { prompts: [], customers: [] },
+  };
+  let state = JSON.parse(JSON.stringify(defaultState));
+
+  function loadState() {
+    return new Promise((resolve) => {
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get([STORAGE_KEY], (res) => {
+          if (res && res[STORAGE_KEY]) Object.assign(state, mergeState(state, res[STORAGE_KEY]));
+          resolve();
+        });
+      } else {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) Object.assign(state, mergeState(state, JSON.parse(raw)));
+        } catch (_) {}
+        resolve();
+      }
     });
   }
 
-  // ————— CARD GRIDS (Dashboard / KI / Wissen) —————
+  function saveState() {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ [STORAGE_KEY]: state });
+    } else {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+    }
+  }
+
+  function mergeState(base, incoming) {
+    const out = JSON.parse(JSON.stringify(base));
+    if (incoming.profile) Object.assign(out.profile, incoming.profile);
+    if (incoming.bookmarks) {
+      out.bookmarks.prompts = Array.isArray(incoming.bookmarks.prompts) ? incoming.bookmarks.prompts : [];
+      out.bookmarks.customers = Array.isArray(incoming.bookmarks.customers) ? incoming.bookmarks.customers : [];
+    }
+    return out;
+  }
+
+  // ————— TABS —————
+  function activateTab(name) {
+    $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === name));
+    $$(".panel").forEach((p) => p.classList.toggle("is-active", p.id === `panel-${name}`));
+  }
+
+  function initTabs() {
+    $$(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+    });
+  }
+
+  // ————— HERO / HEUTE WIDGET —————
+  function renderHero() {
+    const greeting = $("#hero-greeting");
+    const sub = $("#hero-sub");
+    const dateEl = $("#hero-date");
+    const now = new Date();
+    const hour = now.getHours();
+    const tod = hour < 11 ? "Guten Morgen" : hour < 18 ? "Guten Tag" : "Guten Abend";
+    const name = (state.profile.displayName || "").trim();
+    greeting.textContent = name ? `${tod}, ${name}` : `${tod}!`;
+
+    const role = state.profile.role;
+    const region = state.profile.region;
+    const ctxBits = [role, region].filter(Boolean).join(" · ");
+    sub.textContent = ctxBits
+      ? `${ctxBits} — Ihr persönlicher Vertriebs-Tagesimpuls`
+      : "Ihr persönlicher Vertriebs-Tagesimpuls — Profil unter Einstellungen ergänzen";
+
+    const fmt = new Intl.DateTimeFormat("de-DE", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    });
+    dateEl.textContent = fmt.format(now);
+  }
+
+  // ————— CARD GRIDS —————
   function renderCards(containerId, items) {
     const root = $("#" + containerId);
     if (!root) return;
@@ -108,20 +189,23 @@
     });
   }
 
-  function renderPromptList() {
-    const list = $("#prompt-list");
+  function renderPromptList(targetId = "prompt-list", source = null) {
+    const list = $("#" + targetId);
     if (!list) return;
+    const all = source || window.SC_PROMPTS;
     const q = promptFilter.query.trim().toLowerCase();
-    const filtered = window.SC_PROMPTS.filter((p) => {
-      const catOk = promptFilter.category === "Alle" || p.category === promptFilter.category;
-      if (!catOk) return false;
-      if (!q) return true;
-      return (
-        p.title.toLowerCase().includes(q) ||
-        p.desc.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
-    });
+    const filtered = source
+      ? all
+      : all.filter((p) => {
+          const catOk = promptFilter.category === "Alle" || p.category === promptFilter.category;
+          if (!catOk) return false;
+          if (!q) return true;
+          return (
+            p.title.toLowerCase().includes(q) ||
+            p.desc.toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q)
+          );
+        });
 
     list.innerHTML = "";
     if (filtered.length === 0) {
@@ -129,52 +213,61 @@
       return;
     }
 
-    filtered.forEach((p) => {
-      const item = document.createElement("div");
-      item.className = "prompt-item";
+    filtered.forEach((p) => list.appendChild(renderPromptItem(p)));
+  }
 
-      const targetLabel =
-        p.target === "researcher"
-          ? "Microsoft Researcher"
-          : p.target === "agent"
-          ? "Microsoft Agent"
-          : "Copilot Chat";
-      const targetClass =
-        p.target === "researcher" ? "researcher" : p.target === "agent" ? "agent" : "copilot";
+  function renderPromptItem(p) {
+    const item = document.createElement("div");
+    item.className = "prompt-item";
+    const targetLabel =
+      p.target === "researcher" ? "Microsoft Researcher" :
+      p.target === "agent" ? "Microsoft Agent" : "Copilot Chat";
+    const targetClass =
+      p.target === "researcher" ? "researcher" :
+      p.target === "agent" ? "agent" : "copilot";
+    const isFav = state.bookmarks.prompts.includes(p.id);
 
-      item.innerHTML = `
-        <div class="prompt-item-head">
-          <div class="prompt-cat">${escapeHtml(p.category)}</div>
-          <span class="prompt-target ${targetClass}">${escapeHtml(targetLabel)}</span>
-        </div>
-        <div class="prompt-title">${escapeHtml(p.title)}</div>
-        <p class="prompt-desc">${escapeHtml(p.desc)}</p>
-        <div class="prompt-actions">
-          <button class="btn primary" data-act="open">In ${escapeHtml(targetLabel)} öffnen</button>
-          <button class="btn" data-act="copy">Prompt kopieren</button>
-        </div>`;
+    item.innerHTML = `
+      <div class="prompt-item-head">
+        <div class="prompt-cat">${escapeHtml(p.category)}</div>
+        <span class="prompt-target ${targetClass}">${escapeHtml(targetLabel)}</span>
+        <button class="bookmark-btn ${isFav ? "is-on" : ""}" data-act="fav" title="Auf Merkliste setzen">${isFav ? "★" : "☆"}</button>
+      </div>
+      <div class="prompt-title">${escapeHtml(p.title)}</div>
+      <p class="prompt-desc">${escapeHtml(p.desc)}</p>
+      <div class="prompt-actions">
+        <button class="btn primary" data-act="open">In ${escapeHtml(targetLabel)} öffnen</button>
+        <button class="btn" data-act="copy">Prompt kopieren</button>
+      </div>`;
 
-      item.querySelector('[data-act="open"]').addEventListener("click", () => {
-        const url = buildPromptUrl(p);
-        openUrl(url);
-      });
-      item.querySelector('[data-act="copy"]').addEventListener("click", () => {
-        copyToClipboard(p.prompt).then(() => showToast("Prompt in Zwischenablage kopiert"));
-      });
-
-      list.appendChild(item);
+    item.querySelector('[data-act="open"]').addEventListener("click", () => openUrl(buildPromptUrl(p)));
+    item.querySelector('[data-act="copy"]').addEventListener("click", () => {
+      copyToClipboard(p.prompt).then(() => showToast("Prompt in Zwischenablage kopiert"));
     });
+    item.querySelector('[data-act="fav"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      togglePromptBookmark(p.id);
+    });
+    return item;
   }
 
   function buildPromptUrl(p) {
     const encoded = encodeURIComponent(p.prompt);
-    if (p.target === "researcher") {
+    if (p.target === "researcher")
       return `https://m365.cloud.microsoft/chat?agent=researcher&q=${encoded}`;
-    }
-    if (p.target === "agent") {
+    if (p.target === "agent")
       return `https://m365.cloud.microsoft/chat?agent=sales-data&q=${encoded}`;
-    }
     return `https://m365.cloud.microsoft/chat?q=${encoded}`;
+  }
+
+  function togglePromptBookmark(id) {
+    const arr = state.bookmarks.prompts;
+    const idx = arr.indexOf(id);
+    if (idx >= 0) arr.splice(idx, 1); else arr.push(id);
+    saveState();
+    renderPromptList();
+    renderWatchlist();
+    showToast(idx >= 0 ? "Aus Merkliste entfernt" : "Zur Merkliste hinzugefügt");
   }
 
   function initPromptSearch() {
@@ -217,36 +310,63 @@
   // ————— TOP-20 KUNDEN —————
   let customerQuery = "";
 
-  function renderCustomers() {
-    const list = $("#customer-list");
+  function renderCustomers(targetId = "customer-list", source = null) {
+    const list = $("#" + targetId);
     if (!list) return;
+    const data = source || window.SC_CUSTOMERS;
     const q = customerQuery.trim().toLowerCase();
-    const filtered = window.SC_CUSTOMERS.filter(
-      (c) =>
-        !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.industry.toLowerCase().includes(q) ||
-        (c.owner || "").toLowerCase().includes(q)
-    );
+    const filtered = source
+      ? data
+      : data.filter(
+          (c) =>
+            !q ||
+            c.name.toLowerCase().includes(q) ||
+            c.industry.toLowerCase().includes(q) ||
+            (c.owner || "").toLowerCase().includes(q)
+        );
     list.innerHTML = "";
     if (filtered.length === 0) {
       list.innerHTML = `<div class="section-hint">Kein Kunde gefunden.</div>`;
       return;
     }
-    filtered.forEach((c) => {
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className = "customer-row";
-      row.innerHTML = `
-        <div class="customer-rank">${c.rank}</div>
-        <div class="customer-info">
-          <div class="customer-name">${escapeHtml(c.name)}</div>
-          <div class="customer-meta">${escapeHtml(c.industry)} · ${escapeHtml(c.region)} · ${escapeHtml(c.status)}</div>
-        </div>
-        <div class="customer-arrow">›</div>`;
-      row.addEventListener("click", () => showCustomerDetail(c));
-      list.appendChild(row);
+    filtered.forEach((c) => list.appendChild(renderCustomerRow(c)));
+  }
+
+  function renderCustomerRow(c) {
+    const wrap = document.createElement("div");
+    wrap.style.position = "relative";
+    const isFav = state.bookmarks.customers.includes(c.rank);
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "customer-row";
+    row.innerHTML = `
+      <div class="customer-rank">${c.rank}</div>
+      <div class="customer-info">
+        <div class="customer-name">${escapeHtml(c.name)}</div>
+        <div class="customer-meta">${escapeHtml(c.industry)} · ${escapeHtml(c.region)} · ${escapeHtml(c.status)}</div>
+      </div>
+      <button class="bookmark-btn ${isFav ? "is-on" : ""}" data-act="fav" title="Auf Merkliste setzen">${isFav ? "★" : "☆"}</button>
+      <div class="customer-arrow">›</div>`;
+    row.addEventListener("click", (e) => {
+      if (e.target.closest('[data-act="fav"]')) return;
+      showCustomerDetail(c);
     });
+    row.querySelector('[data-act="fav"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleCustomerBookmark(c.rank);
+    });
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  function toggleCustomerBookmark(rank) {
+    const arr = state.bookmarks.customers;
+    const idx = arr.indexOf(rank);
+    if (idx >= 0) arr.splice(idx, 1); else arr.push(rank);
+    saveState();
+    renderCustomers();
+    renderWatchlist();
+    showToast(idx >= 0 ? "Aus Merkliste entfernt" : "Zur Merkliste hinzugefügt");
   }
 
   function showCustomerDetail(c) {
@@ -260,8 +380,15 @@
         <div class="detail-grid">
           <div class="detail-cell"><div class="label">Status</div><div class="value">${escapeHtml(c.status)}</div></div>
           <div class="detail-cell"><div class="label">Account-Owner</div><div class="value">${escapeHtml(c.owner)}</div></div>
-          <div class="detail-cell"><div class="label">Potenzial</div><div class="value">${escapeHtml(c.potential)}</div></div>
-          <div class="detail-cell"><div class="label">Region</div><div class="value">${escapeHtml(c.region)}</div></div>
+          <div class="detail-cell"><div class="label">Umsatz (12M)</div><div class="value">${escapeHtml(c.revenue || "—")}</div></div>
+          <div class="detail-cell"><div class="label">Wachstum YoY</div><div class="value">${escapeHtml(c.growth || "—")}</div></div>
+          <div class="detail-cell"><div class="label">Offene Opportunities</div><div class="value">${c.openOpps != null ? c.openOpps : "—"}</div></div>
+          <div class="detail-cell"><div class="label">Letzter Kontakt</div><div class="value">${escapeHtml(c.lastContact || "—")}</div></div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Schlüssel-Kontakt</h4>
+          <p>${escapeHtml(c.keyContact || "—")}</p>
         </div>
 
         <div class="detail-section">
@@ -278,12 +405,40 @@
             <button class="btn" data-go="researcher">Microsoft Researcher</button>
           </div>
         </div>
+
+        <div class="detail-section">
+          <h4>Quick-Actions</h4>
+          <div class="detail-actions">
+            <button class="btn" data-go="meeting">Gesprächsvorbereitung</button>
+            <button class="btn" data-go="qbr">QBR-Agenda erstellen</button>
+            <button class="btn accent" data-go="flow">Go-Forward-Sales auslösen</button>
+          </div>
+        </div>
       </div>`;
 
     wrap.querySelector('[data-go="msd"]').addEventListener("click", () => openUrl(links.msdSearch(c.name)));
     wrap.querySelector('[data-go="sp"]').addEventListener("click", () => openUrl(links.sharepointSearch(c.name)));
     wrap.querySelector('[data-go="copilot"]').addEventListener("click", () => openUrl(links.copilotBrief(c.name)));
     wrap.querySelector('[data-go="researcher"]').addEventListener("click", () => openUrl(links.researcher(c.name)));
+
+    wrap.querySelector('[data-go="meeting"]').addEventListener("click", () => {
+      const prompt = window.SC_PROMPTS.find((p) => p.id === "p01");
+      if (!prompt) return;
+      const filled = prompt.prompt.replace("{KUNDE}", c.name).replace("{BRANCHE}", c.industry);
+      openUrl(`https://m365.cloud.microsoft/chat?q=${encodeURIComponent(filled)}`);
+    });
+    wrap.querySelector('[data-go="qbr"]').addEventListener("click", () => {
+      const prompt = window.SC_PROMPTS.find((p) => p.id === "p18");
+      if (!prompt) return;
+      const filled = prompt.prompt.replace("{KUNDE}", c.name);
+      openUrl(`https://m365.cloud.microsoft/chat?q=${encodeURIComponent(filled)}`);
+    });
+    wrap.querySelector('[data-go="flow"]').addEventListener("click", () => {
+      const flow = window.SC_FLOWS.find((f) => f.id === "f01");
+      if (!flow) return;
+      const body = (flow.body || "").replace("Account: ", `Account: ${c.name}`);
+      openUrl(window.SC_BUILD_MAILTO(flow.subject, body));
+    });
 
     $("#kunden-list-view").hidden = true;
     $("#kunden-detail-view").hidden = false;
@@ -341,7 +496,65 @@
       </div>`;
   }
 
-  // ————— FOOTER —————
+  // ————— MERKLISTE —————
+  function renderWatchlist() {
+    const promptIds = state.bookmarks.prompts;
+    const customerRanks = state.bookmarks.customers;
+    const promptItems = promptIds
+      .map((id) => window.SC_PROMPTS.find((p) => p.id === id))
+      .filter(Boolean);
+    const customerItems = customerRanks
+      .map((r) => window.SC_CUSTOMERS.find((c) => c.rank === r))
+      .filter(Boolean);
+
+    renderPromptList("watchlist-prompts", promptItems);
+    renderCustomers("watchlist-customers", customerItems);
+
+    const empty = promptItems.length === 0 && customerItems.length === 0;
+    $("#watchlist-empty").hidden = !empty;
+  }
+
+  // ————— EINSTELLUNGEN —————
+  function fillSettingsForm() {
+    const form = $("#settings-form");
+    const p = state.profile;
+    form.elements.displayName.value = p.displayName || "";
+    form.elements.role.value = p.role || "";
+    form.elements.region.value = p.region || "";
+    form.elements.defaultTab.value = p.defaultTab || "dashboard";
+    form.elements.defaultAgent.value = p.defaultAgent || "copilot";
+  }
+
+  function initSettings() {
+    const form = $("#settings-form");
+    fillSettingsForm();
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.profile = {
+        displayName: form.elements.displayName.value.trim(),
+        role: form.elements.role.value,
+        region: form.elements.region.value,
+        defaultTab: form.elements.defaultTab.value,
+        defaultAgent: form.elements.defaultAgent.value,
+      };
+      saveState();
+      renderHero();
+      showToast("Einstellungen gespeichert");
+    });
+    $("#settings-reset").addEventListener("click", () => {
+      state.profile = JSON.parse(JSON.stringify(defaultState.profile));
+      saveState();
+      fillSettingsForm();
+      renderHero();
+      showToast("Einstellungen zurückgesetzt");
+    });
+    $("#open-roxtra").addEventListener("click", (e) => {
+      e.preventDefault();
+      openUrl(ROXTRA_URL);
+    });
+  }
+
+  // ————— FOOTER & GLOBAL —————
   function initFooter() {
     $("#open-hub").addEventListener("click", (e) => {
       e.preventDefault();
@@ -352,20 +565,12 @@
     );
   }
 
-  // ————— ESCAPE —————
-  function escapeHtml(str) {
-    if (str == null) return "";
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
-
   // ————— INIT —————
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadState();
+
     initTabs();
+    renderHero();
 
     // Dashboard
     renderCards("dashboard-grid", window.SC_LINKS.dashboard);
@@ -393,6 +598,16 @@
     renderCards("playbook-grid", window.SC_LINKS.playbooks);
     renderCards("compliance-grid", window.SC_LINKS.compliance);
 
+    // Merkliste & Einstellungen
+    renderWatchlist();
+    initSettings();
+
     initFooter();
+
+    // Default tab
+    const startTab = state.profile.defaultTab && $(`.tab[data-tab="${state.profile.defaultTab}"]`)
+      ? state.profile.defaultTab
+      : "dashboard";
+    activateTab(startTab);
   });
 })();

@@ -794,6 +794,163 @@ body {
   z-index: 1000;
 }
 
+/* HERO / HEUTE */
+.hero-card {
+  background: linear-gradient(135deg, #111418 0%, #1f2630 100%);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 14px 14px 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+
+.hero-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.hero-greeting {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.hero-sub {
+  font-size: 11.5px;
+  color: #b8bdc6;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.hero-date {
+  font-size: 10.5px;
+  color: #b8bdc6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hero-stat {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.hero-stat .num {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.hero-stat .lbl {
+  display: block;
+  font-size: 9.5px;
+  color: #b8bdc6;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* BOOKMARK STARS */
+.bookmark-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #c5c8cf;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  line-height: 1;
+}
+
+.bookmark-btn:hover { color: var(--accent); background: var(--accent-soft); }
+.bookmark-btn.is-on { color: var(--accent); }
+
+.prompt-item-head .bookmark-btn { margin-left: 4px; }
+
+.customer-row .bookmark-btn { margin-right: -4px; }
+
+/* SETTINGS FORM */
+.settings-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-field span {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft);
+}
+
+.settings-field input,
+.settings-field select {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.settings-field input:focus,
+.settings-field select:focus {
+  outline: 2px solid rgba(210, 34, 49, 0.18);
+  border-color: var(--accent);
+}
+
+.settings-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.about-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px 12px;
+}
+
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.about-row:last-child { border-bottom: none; }
+.about-row .muted { color: var(--text-soft); }
+.about-row a.muted { text-decoration: none; }
+.about-row a.muted:hover { color: var(--accent); }
+
 /* SCROLLBAR */
 .tab-panels::-webkit-scrollbar { width: 8px; }
 .tab-panels::-webkit-scrollbar-thumb {

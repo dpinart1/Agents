@@ -8,12 +8,14 @@ Schnellzugriff auf Vertriebssysteme (MSD, PSE 2.0, Visual Planner, CBW, SAC), ku
 
 | Tab | Inhalt |
 |-----|--------|
-| **Dashboard** | Schnellstart-Kacheln zu Vertriebssystemen + Reporting/Analytics |
+| **Dashboard** | Personalisiertes *Heute*-Widget (Begrüßung, Datum, KPI-Snapshot) + Schnellstart-Kacheln zu Vertriebssystemen + Reporting/Analytics |
 | **Sales KI** | KI-Assistenten (Copilot, Researcher, Sales Agents) + Prompt-Bibliothek mit 20 kuratierten Vertriebs-Prompts entlang der Wertschöpfungskette |
 | **Flows** | Automatisierte Sales-Workflows per Trigger-Mail an `automation_ps@enterprise.com` (z. B. *Go Forward Sales*, *Lead Handover*, *Deal Approval*) |
-| **Top 20** | Strategische Schlüsselkunden mit Detail-Ansicht und Deeplinks zu MSD, SharePoint, Copilot-Briefing & Microsoft Researcher |
+| **Top 20** | Strategische Schlüsselkunden mit Detail-Ansicht (Umsatz, Wachstum, offene Opportunities, Schlüssel-Kontakt, Quick-Actions) und Deeplinks zu MSD, SharePoint, Copilot-Briefing & Microsoft Researcher |
 | **Fokus** | Strategische Stoßrichtungen, Wachstumsfelder & Budgetallokation je Geschäftsjahr |
 | **Wissen** | RoXtra-KI-Richtlinie, PS AI HUB, Sales-Playbooks, Compliance & Governance |
+| **Merkliste** | Persönliche Sammlung favorisierter Prompts und Schlüsselkunden (★) — persistent via `chrome.storage.local` |
+| **Einstellungen** | Persönliches Profil (Name, Rolle, Region), Standard-Tab beim Öffnen, bevorzugter KI-Assistent |
 
 ## Prompt-Routing
 

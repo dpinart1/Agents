@@ -19,7 +19,7 @@
         <span class="status-dot"></span>
         <span class="status-label">Cockpit aktiv</span>
         <span class="status-spacer"></span>
-        <span class="status-pill">v1.0</span>
+        <span class="status-pill">v1.1</span>
       </div>
     </header>
 
@@ -30,11 +30,28 @@
       <button class="tab" role="tab" data-tab="kunden">Top 20</button>
       <button class="tab" role="tab" data-tab="fokus">Fokus</button>
       <button class="tab" role="tab" data-tab="wissen">Wissen</button>
+      <button class="tab" role="tab" data-tab="merkliste">Merkliste</button>
+      <button class="tab" role="tab" data-tab="einstellungen">Einstellungen</button>
     </nav>
 
     <main class="tab-panels">
       <!-- DASHBOARD -->
       <section class="panel is-active" id="panel-dashboard" role="tabpanel">
+        <div class="hero-card" id="hero-card">
+          <div class="hero-row">
+            <div class="hero-text">
+              <div class="hero-greeting" id="hero-greeting">Willkommen im Sales Cockpit</div>
+              <div class="hero-sub" id="hero-sub">Ihr persönlicher Vertriebs-Tagesimpuls</div>
+            </div>
+            <div class="hero-date" id="hero-date"></div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><span class="num" id="kpi-pipeline">€ 42,8 Mio.</span><span class="lbl">Pipeline-Volumen</span></div>
+            <div class="hero-stat"><span class="num" id="kpi-coverage">3,1×</span><span class="lbl">Quota-Coverage</span></div>
+            <div class="hero-stat"><span class="num" id="kpi-quota">87 %</span><span class="lbl">Quota Q-to-Date</span></div>
+          </div>
+        </div>
+
         <h2 class="section-heading">Schnellstart — Vertriebssysteme</h2>
         <div class="card-grid" id="dashboard-grid"></div>
 
@@ -50,6 +67,10 @@
           <div class="status-line">
             <span>Sales Enablement</span>
             <span class="pill-state">AKTIV</span>
+          </div>
+          <div class="status-line">
+            <span>KI-Richtlinie bestätigt</span>
+            <span class="pill-state">GÜLTIG</span>
           </div>
         </div>
       </section>
@@ -108,6 +129,90 @@
 
         <h2 class="section-heading">Compliance &amp; Governance</h2>
         <div class="card-grid" id="compliance-grid"></div>
+      </section>
+
+      <!-- MERKLISTE -->
+      <section class="panel" id="panel-merkliste" role="tabpanel">
+        <h2 class="section-heading">Merkliste — Favorisierte Prompts</h2>
+        <div class="prompt-list" id="watchlist-prompts"></div>
+
+        <h2 class="section-heading">Merkliste — Schlüsselkunden</h2>
+        <div class="customer-list" id="watchlist-customers"></div>
+
+        <p class="section-hint" id="watchlist-empty" hidden>
+          Noch nichts gemerkt. Tippen Sie auf das ★-Symbol bei Prompts oder Kunden, um sie hier zu sammeln.
+        </p>
+      </section>
+
+      <!-- EINSTELLUNGEN -->
+      <section class="panel" id="panel-einstellungen" role="tabpanel">
+        <h2 class="section-heading">Persönliches Profil</h2>
+        <form class="settings-form" id="settings-form">
+          <label class="settings-field">
+            <span>Anrede / Name</span>
+            <input type="text" name="displayName" placeholder="z. B. Daniel Plum" />
+          </label>
+          <label class="settings-field">
+            <span>Rolle</span>
+            <select name="role">
+              <option value="">— bitte wählen —</option>
+              <option>Account Manager</option>
+              <option>Key Account Manager</option>
+              <option>Sales Lead</option>
+              <option>Sales Director</option>
+              <option>Inside Sales</option>
+              <option>Pre-Sales / Solution</option>
+            </select>
+          </label>
+          <label class="settings-field">
+            <span>Region</span>
+            <select name="region">
+              <option value="">— bitte wählen —</option>
+              <option>DACH</option>
+              <option>EU West</option>
+              <option>EU Ost</option>
+              <option>UK &amp; Irland</option>
+              <option>Nord-Amerika</option>
+              <option>APAC</option>
+              <option>MEA</option>
+              <option>LATAM</option>
+              <option>Global</option>
+            </select>
+          </label>
+          <label class="settings-field">
+            <span>Standard-Tab beim Öffnen</span>
+            <select name="defaultTab">
+              <option value="dashboard">Dashboard</option>
+              <option value="ki">Sales KI</option>
+              <option value="flows">Flows</option>
+              <option value="kunden">Top 20</option>
+              <option value="fokus">Fokus</option>
+              <option value="wissen">Wissen</option>
+              <option value="merkliste">Merkliste</option>
+            </select>
+          </label>
+          <label class="settings-field">
+            <span>Bevorzugter KI-Assistent</span>
+            <select name="defaultAgent">
+              <option value="copilot">Microsoft 365 Copilot</option>
+              <option value="researcher">Microsoft Researcher</option>
+              <option value="agent">Microsoft Sales-Daten-Agent</option>
+            </select>
+          </label>
+          <div class="settings-actions">
+            <button type="submit" class="btn primary">Speichern</button>
+            <button type="button" class="btn" id="settings-reset">Zurücksetzen</button>
+          </div>
+        </form>
+
+        <h2 class="section-heading">Über</h2>
+        <div class="about-card">
+          <div class="about-row"><span>PS Sales Cockpit</span><span class="muted">v1.1.0</span></div>
+          <div class="about-row"><span>Manifest</span><span class="muted">V3 · Edge / Chrome / Brave</span></div>
+          <div class="about-row"><span>Verarbeitung</span><span class="muted">100 % lokal im Browser</span></div>
+          <div class="about-row"><span>Verantwortlich</span><span class="muted">Daniel Plum, PS AI HUB</span></div>
+          <div class="about-row"><span>KI-Richtlinie</span><a href="#" id="open-roxtra" class="muted">RoXtra öffnen →</a></div>
+        </div>
       </section>
     </main>
 
